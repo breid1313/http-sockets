@@ -1,14 +1,18 @@
-# http client
+# http client file
+
 import argparse
 import socket
 
 # declare a constant with the HTTP version given in the assignment
 HTTP_VERSION = 1.1
 
+# constant buffer size
+BUFF_SIZE = 1024
+
 
 def parse_args():
     # instantiate an argument parser to gather the command line input
-    parser = argparse.ArgumentParser(description="Make and HTTP request to a server.")
+    parser = argparse.ArgumentParser(description="Make an HTTP request to a server.")
 
     # add the expected arguments
     parser.add_argument(
@@ -62,11 +66,11 @@ def main():
 
     if method.upper() == "PUT":
         # send the file to the server
-        with open(filename) as f:
+        with open(filename, "r") as f:
             print(f"about to send {filename}...")
 
             # read in enough data to fill the buffer
-            l = f.read(1024)
+            l = f.read(buff_size)
 
             # until the file has been entirely read...
             while l:
@@ -74,15 +78,15 @@ def main():
                 # send the buffered data to the server
                 client.send(l)
                 # read more data into the buffer
-                l = f.read(1024)
+                l = f.read(BUFF_SIZE)
         print("Done sending")
         # notify the server that we're done sending data
         s.shutdown(socket.SHUT_WR)
 
     # receive the response from the server
-    response = client.recv(1024)
+    response = client.recv(BUFF_SIZE)
     print("Response received!")
-    print(response.decode())
+    print(response.decode("utf-8"))
 
     # close the socket once finished
     client.close()
