@@ -63,6 +63,7 @@ def main():
     # send the request to the server
     client.send(request.encode())
     print("Request sent!")
+    client.shutdown(socket.SHUT_WR)
 
     if method.upper() == "PUT":
         # send the file to the server
@@ -70,7 +71,7 @@ def main():
             print(f"about to send {filename}...")
 
             # read in enough data to fill the buffer
-            l = f.read(buff_size)
+            l = f.read(BUFF_SIZE)
 
             # until the file has been entirely read...
             while l:
@@ -81,7 +82,7 @@ def main():
                 l = f.read(BUFF_SIZE)
         print("Done sending")
         # notify the server that we're done sending data
-        s.shutdown(socket.SHUT_WR)
+        client.shutdown(socket.SHUT_WR)
 
     # receive the response from the server
     response = client.recv(BUFF_SIZE)

@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 import time
 import traceback
+import signal
+
 
 # declare a constant with the HTTP version given in the assignment
 HTTP_VERSION = 1.1
@@ -28,6 +30,13 @@ def parse_args():
 
     # parse the args from the command line
     return parser.parse_args()
+
+
+def shutdown(sig, dummy):
+    """This function shuts down the server. It's triggered
+    by SIGINT signal"""
+    s.shutdown()
+    sys.exit(1)
 
 
 def return_file(connection, filename):
@@ -66,15 +75,19 @@ def return_file(connection, filename):
 
 def put_file(connection, filename, content):
     asset = Path(__file__).parent / "static" / filename
-    
+
     created = True if not asset.is_file() else False
 
     # opening in w mode will delete the contents of the file before
     # writing, hence updating withe the new asset
-    with open(asset, 'w') as f:
+    with open(asset, "w") as f:
         f.write(content)
 
-    message = f"HTTP/{HTTP_VERSION} 201 Content created\r\n" if created else message = f"HTTP/{HTTP_VERSION} 200 OK\r\n"
+    message = (
+        f"HTTP/{HTTP_VERSION} 201 Content created\r\n"
+        if created
+        else f"HTTP/{HTTP_VERSION} 200 OK\r\n"
+    )
     dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
     message += f"Date: {dt}\r\n"
     message += "Server: Python HTTP Socket Server\r\n"
@@ -84,6 +97,20 @@ def put_file(connection, filename, content):
     connection.send(message.encode())
     connection.close()
     print("closed connection")
+
+
+def receive_data(connection, server):
+    chunks = []
+    chunks.append(connection.recv(BUFF_SIZE).decode("utf-8"))
+    while True:
+        try:
+            data = connection.recv(BUFF_SIZE).decode("utf-8")
+            if not data:
+                break
+            chunks.append(data)
+        except:
+            raise
+    return "".join(chunks)
 
 
 def main():
@@ -103,13 +130,14 @@ def main():
     server.listen(1)
     print("server started at {}:{}".format(host, port))
 
-    # TODO read until the data buffer is empty
     while True:
         try:
+            # accept an incoming connection
             connection, address = server.accept()
             print(f"received incoming connection from {repr(address)}.")
 
-            data = connection.recv(BUFF_SIZE).decode("utf-8")
+            data = receive_data(connection, server)
+
             method = data.split(" ")[0].upper()
             print("HTTP method: " + method)
             filename = data.split(" ")[1]
@@ -120,7 +148,7 @@ def main():
         except Exception as e:
             # debug
             traceback.format_exc(e)
-            
+
             # we had a problem... send a 500
             message = f"HTTP/{HTTP_VERSION} 500 Server Error\r\n"
             dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
@@ -131,8 +159,9 @@ def main():
             connection.send(message.encode())
             connection.close()
 
-        # TODO send response for PUT
-
 
 if __name__ == "__main__":
+    # shut down on ctrl+c
+    signal.signal(signal.SIGINT, shutdown)
+
     sys.exit(main(sys.argv))
