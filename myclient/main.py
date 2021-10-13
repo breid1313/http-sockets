@@ -100,12 +100,11 @@ def main():
     # receive the response from the server
     response = client.recv(BUFF_SIZE)
     print("Response received!")
-    print(response.decode("utf-8"))
 
     # close the socket once finished
     client.close()
 
-    return
+    return response.decode("utf-8")
 
 
 if __name__ == "__main__":
