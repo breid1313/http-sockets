@@ -104,8 +104,8 @@ def main():
     print("server started at {}:{}".format(host, port))
 
     # TODO read until the data buffer is empty
-    try:
-        while True:
+    while True:
+        try:
             connection, address = server.accept()
             print(f"received incoming connection from {repr(address)}.")
 
@@ -117,21 +117,20 @@ def main():
 
             if method == "GET":
                 return_file(connection, filename)
-    except Exception as e:
-        # debug
-        traceback.format_exc(e)
-        
-        # we had a problem... send a 500
-        message = f"HTTP/{HTTP_VERSION} 500 Server Error\r\n"
-        dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
-        message += f"Date: {dt}\r\n"
-        message += "Server: Python HTTP Socket Server\r\n"
-        message += "Connection: close\r\n\r\n"
+        except Exception as e:
+            # debug
+            traceback.format_exc(e)
+            
+            # we had a problem... send a 500
+            message = f"HTTP/{HTTP_VERSION} 500 Server Error\r\n"
+            dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+            message += f"Date: {dt}\r\n"
+            message += "Server: Python HTTP Socket Server\r\n"
+            message += "Connection: close\r\n\r\n"
 
-        server.send(message.encode())
-        server.close()
+            connection.send(message.encode())
+            connection.close()
 
-        # TODO write file for PUT
         # TODO send response for PUT
 
 
