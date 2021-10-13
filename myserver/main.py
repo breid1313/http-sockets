@@ -64,6 +64,28 @@ def return_file(connection, filename):
     return
 
 
+def put_file(connection, filename, content):
+    asset = Path(__file__).parent / "static" / filename
+    
+    created = True if not asset.is_file() else False
+
+    # opening in w mode will delete the contents of the file before
+    # writing, hence updating withe the new asset
+    with open(asset, 'w') as f:
+        f.write(content)
+
+    message = f"HTTP/{HTTP_VERSION} 201 Content created\r\n" if created else message = f"HTTP/{HTTP_VERSION} 200 OK\r\n"
+    dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+    message += f"Date: {dt}\r\n"
+    message += "Server: Python HTTP Socket Server\r\n"
+    message += "Connection: close\r\n\r\n"
+
+    print("sending 2xx")
+    connection.send(message.encode())
+    connection.close()
+    print("closed connection")
+
+
 def main():
     args = parse_args()
 
@@ -81,7 +103,7 @@ def main():
     server.listen(1)
     print("server started at {}:{}".format(host, port))
 
-    # until the data buffer is empty
+    # TODO read until the data buffer is empty
     try:
         while True:
             connection, address = server.accept()
@@ -96,10 +118,19 @@ def main():
             if method == "GET":
                 return_file(connection, filename)
     except Exception as e:
+        # debug
         traceback.format_exc(e)
+        
+        # we had a problem... send a 500
+        message = f"HTTP/{HTTP_VERSION} 500 Server Error\r\n"
+        dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+        message += f"Date: {dt}\r\n"
+        message += "Server: Python HTTP Socket Server\r\n"
+        message += "Connection: close\r\n\r\n"
+
+        server.send(message.encode())
         server.close()
 
-        # TODO give client a heads up that it's ok to send a file for PUT?
         # TODO write file for PUT
         # TODO send response for PUT
 
