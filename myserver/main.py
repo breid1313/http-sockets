@@ -23,9 +23,7 @@ def parse_args():
 
     # add the expected argument
     parser.add_argument(
-        "port",
-        type=int,
-        help="Port to bind the server to",
+        "port", type=int, help="Port to bind the server to",
     )
 
     # parse the args from the command line
@@ -122,6 +120,11 @@ def main():
     port = args.port
 
     # get host name
+    # we don't actually use this... if we call bind() with the host name that
+    # we just gathered, its a little more tricky to connect to the socket in
+    # that the HTTP request needs to have the hostname (brians-air.comcast....)
+    # but if we pass bind() and empty string, we're also able to connect to the
+    # socket by passing localhost as the hostname
     host = socket.gethostname()
 
     # initialize the server socket, bind to the local machine on the desired port
