@@ -91,7 +91,7 @@ def main():
     # close the socket once finished
     client.close()
 
-    return response.decode()
+    return
 
 
 if __name__ == "__main__":

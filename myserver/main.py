@@ -93,22 +93,15 @@ def main():
             filename = data.split(" ")[1]
             print("file name: " + filename)
 
-            # connection.send("test message!".encode())
-            # connection.close()
             if method == "GET":
                 return_file(connection, filename)
     except Exception as e:
         traceback.format_exc(e)
         server.close()
 
-        # TODO send file for GET requests
-        # TODO give client a heads up that it's ok to send a file for PUT
+        # TODO give client a heads up that it's ok to send a file for PUT?
         # TODO write file for PUT
         # TODO send response for PUT
-
-        # data = connection.recv(1024).decode()
-        # if not data:
-        #    break  # exit while loop
 
 
 if __name__ == "__main__":
