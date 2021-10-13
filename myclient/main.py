@@ -2,6 +2,7 @@
 
 import argparse
 import socket
+from pathlib import Path
 
 # declare a constant with the HTTP version given in the assignment
 HTTP_VERSION = 1.1
@@ -40,6 +41,11 @@ def prepare_request(method: str, filename: str, host: str) -> str:
     return f"{method.upper()} {filename} HTTP/{HTTP_VERSION}\r\nHost: {host}\r\n\r\n"
 
 
+def split_data(data, chunk_size):
+    for i in range(0, len(data), chunk_size):
+        yield data[i : i + chunk_size]
+
+
 def main():
     args = parse_args()
 
@@ -55,31 +61,38 @@ def main():
     # connect to the host over the desired port
     client.connect((host, port))
 
-    # build the HTTP request message
-    request = prepare_request(method, filename, host)
-    print("Ready to send the following HTTP request:")
-    print(request)
+    if method.upper() == "GET":
+        # build the HTTP request message
+        request = prepare_request(method, filename, host)
+        print("Ready to send the following HTTP request:")
+        print(request)
 
-    # send the request to the server
-    client.send(request.encode())
-    print("Request sent!")
-    client.shutdown(socket.SHUT_WR)
+        # send the request to the server
+        client.send(request.encode())
+        print("Request sent!")
+        client.shutdown(socket.SHUT_WR)
 
-    if method.upper() == "PUT":
-        # send the file to the server
-        with open(filename, "r") as f:
+    elif method.upper() == "PUT":
+        path = Path(__file__).parent / "static" / filename
+        if not path.is_file():
+            raise FileNotFoundError(
+                f"Filename '{filename}' not found in myclient/static. Check your spelling or create the file."
+            )
+
+        # prep the base request
+        request = prepare_request(method, filename, host)
+
+        # add the file data to the body
+        with open(path, "r") as f:
             print(f"about to send {filename}...")
+            lines = f.read()
+        request += lines
+        print("Request to send:\n" + request)
 
-            # read in enough data to fill the buffer
-            l = f.read(BUFF_SIZE)
-
-            # until the file has been entirely read...
-            while l:
-                print("sending...")
-                # send the buffered data to the server
-                client.send(l)
-                # read more data into the buffer
-                l = f.read(BUFF_SIZE)
+        # send the file to the server
+        print("sending...")
+        for chunk in split_data(request, BUFF_SIZE):
+            client.send(chunk.encode())
         print("Done sending")
         # notify the server that we're done sending data
         client.shutdown(socket.SHUT_WR)

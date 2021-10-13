@@ -98,6 +98,8 @@ def put_file(connection, filename, content):
     connection.close()
     print("closed connection")
 
+    return
+
 
 def receive_data(connection, server):
     chunks = []
@@ -138,6 +140,8 @@ def main():
 
             data = receive_data(connection, server)
 
+            print(data)
+
             method = data.split(" ")[0].upper()
             print("HTTP method: " + method)
             filename = data.split(" ")[1]
@@ -145,6 +149,11 @@ def main():
 
             if method == "GET":
                 return_file(connection, filename)
+
+            if method == "PUT":
+                content = data.split("\r\n\r\n")[1]
+                put_file(connection, filename, content)
+
         except Exception as e:
             # debug
             traceback.format_exc(e)

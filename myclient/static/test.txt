@@ -1,0 +1,3 @@
+this is a test file
+send a PUT request to the http sever with the name of this file to
+create or overwrite this asset in myserver/static
