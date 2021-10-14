@@ -5,8 +5,6 @@ import socket
 import sys
 from pathlib import Path
 import time
-import traceback
-import signal
 
 
 # declare a constant with the HTTP version given in the assignment
