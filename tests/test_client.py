@@ -1,4 +1,3 @@
-import sys
 import argparse
 import unittest
 from unittest import mock

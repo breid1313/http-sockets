@@ -2,7 +2,6 @@
 
 import argparse
 import socket
-import os
 import sys
 from pathlib import Path
 import time
