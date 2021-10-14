@@ -17,20 +17,14 @@ def parse_args():
 
     # add the expected arguments
     parser.add_argument(
-        "host",
-        type=str,
-        help="Host to which you would like to make a request",
+        "host", type=str, help="Host to which you would like to make a request",
     )
     parser.add_argument(
-        "port",
-        type=int,
-        help="Port over which to make the request",
+        "port", type=int, help="Port over which to make the request",
     )
     parser.add_argument("method", type=str, help="HTTP method to use")
     parser.add_argument(
-        "filename",
-        type=str,
-        help="File to request from the server",
+        "filename", type=str, help="File to request from the server",
     )
 
     # parse the args from the command line
@@ -58,6 +52,8 @@ def main():
     # instantiate a low-level networking client from the builtin socket library
     # the first argument defines the address family, and the second defines the socket type
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # allow us to reconnect if the process is killed
+    client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # connect to the host over the desired port
     client.connect((host, port))
 

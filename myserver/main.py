@@ -29,13 +29,6 @@ def parse_args():
     return parser.parse_args()
 
 
-def shutdown(sig, dummy):
-    """This function shuts down the server. It's triggered
-    by SIGINT signal"""
-    s.shutdown()
-    sys.exit(1)
-
-
 def return_file(connection, filename):
     asset = Path(__file__).parent / "static" / filename
     if not asset.is_file():
@@ -73,13 +66,16 @@ def return_file(connection, filename):
 def put_file(connection, filename, content):
     asset = Path(__file__).parent / "static" / filename
 
+    # does the file already exist?
     created = True if not asset.is_file() else False
 
     # opening in w mode will delete the contents of the file before
-    # writing, hence updating withe the new asset
+    # writing, hence updating with the new asset
     with open(asset, "w") as f:
         f.write(content)
 
+    # craft our response message, change the status code depending
+    # on whether or not we created a new file or updated an existing one
     message = (
         f"HTTP/{HTTP_VERSION} 201 Content created\r\n"
         if created
@@ -98,7 +94,11 @@ def put_file(connection, filename, content):
     return
 
 
-def receive_data(connection, server):
+def receive_data(connection):
+    """Receive 'chunks' of data from the client into a buffer until the
+    data stops coming in. Then join the chunks to obtain the original
+    data string that was sent.
+    """
     chunks = []
     chunks.append(connection.recv(BUFF_SIZE).decode("utf-8"))
     while True:
@@ -126,8 +126,11 @@ def main():
     # socket by passing localhost as the hostname
     host = socket.gethostname()
 
-    # initialize the server socket, bind to the local machine on the desired port
+    # instantiate a low-level networking client from the builtin socket library
+    # the first argument defines the address family, and the second defines the socket type
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # allow us to reconnect if the process is killed
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(("", port))
 
     # only allow 1 concurrent connection
@@ -140,26 +143,24 @@ def main():
             connection, address = server.accept()
             print(f"received incoming connection from {repr(address)}.")
 
+            # receive all data from the client
             data = receive_data(connection, server)
 
-            print(data)
-
+            # parse the HTTP method and filename from the incoming message
             method = data.split(" ")[0].upper()
-            print("HTTP method: " + method)
             filename = data.split(" ")[1]
-            print("file name: " + filename)
 
             if method == "GET":
+                # send a message back with the desired file or 404
                 return_file(connection, filename)
 
             if method == "PUT":
+                # get the file data from the request
                 content = data.split("\r\n\r\n")[1]
+                # try to write the file data and return a response message
                 put_file(connection, filename, content)
 
-        except Exception as e:
-            # debug
-            traceback.format_exc(e)
-
+        except Exception:
             # we had a problem... send a 500
             message = f"HTTP/{HTTP_VERSION} 500 Server Error\r\n"
             dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
@@ -172,7 +173,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # shut down on ctrl+c
-    signal.signal(signal.SIGINT, shutdown)
-
     sys.exit(main(sys.argv))
