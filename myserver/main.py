@@ -30,6 +30,7 @@ def parse_args():
 def return_file(connection, filename):
     asset = Path(__file__).parent / "static" / filename
     if not asset.is_file():
+        # craft a HTTP 404 message, send it, and close the connection
         message = f"HTTP/{HTTP_VERSION} 404 Not Found\r\n"
         dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
         message += f"Date: {dt}\r\n"
