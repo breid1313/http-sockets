@@ -40,6 +40,28 @@ def split_data(data, chunk_size):
         yield data[i : i + chunk_size]
 
 
+def receive_data(connection):
+    """Receive 'chunks' of data from the client into a buffer until the
+    data stops coming in. Then join the chunks to obtain the original
+    data string that was sent.
+    """
+    chunks = []
+    chunks.append(connection.recv(BUFF_SIZE).decode("utf-8"))
+    if not chunks:
+        return chunks
+    while True:
+        try:
+            data = connection.recv(BUFF_SIZE).decode("utf-8")
+            if not data:
+                break
+            chunks.append(data)
+        except:
+            # failsafe
+            # if the connection is broken, just return what we have so far
+            return "".join(chunks)
+    return "".join(chunks)
+
+
 def main():
     args = parse_args()
 
@@ -94,13 +116,13 @@ def main():
         client.shutdown(socket.SHUT_WR)
 
     # receive the response from the server
-    response = client.recv(BUFF_SIZE)
+    response = receive_data(client)
     print("Response received!")
 
     # close the socket once finished
     client.close()
 
-    return response.decode("utf-8")
+    return response
 
 
 if __name__ == "__main__":
