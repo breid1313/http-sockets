@@ -5,6 +5,7 @@ import socket
 import sys
 from pathlib import Path
 import time
+import traceback
 
 
 # declare a constant with the HTTP version given in the assignment
@@ -143,7 +144,7 @@ def main():
             print(f"received incoming connection from {repr(address)}.")
 
             # receive all data from the client
-            data = receive_data(connection, server)
+            data = receive_data(connection)
 
             # parse the HTTP method and filename from the incoming message
             method = data.split(" ")[0].upper()
@@ -171,12 +172,16 @@ def main():
                 connection.close()
 
         except Exception:
+            print(traceback.format_exc())
+
             # we had a problem... send a 500
             message = f"HTTP/{HTTP_VERSION} 500 Server Error\r\n"
             dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
             message += f"Date: {dt}\r\n"
             message += "Server: Python HTTP Socket Server\r\n"
             message += "Connection: close\r\n\r\n"
+
+            print("sending 500...")
 
             connection.send(message.encode())
             connection.close()
