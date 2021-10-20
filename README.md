@@ -32,3 +32,11 @@ directory can be requested with GET requests.
 When executing a POST request, the client will search the `myclient/static` directory for the filename given.
 If that file is found, the client will send the POST request and file data out to the server. Otherwise,
 the client will display a friendly error message asking you to check your spelling.
+
+## Run the tests
+
+First, start the server on port 5678 if you haven't already: `myserver 5678`.
+
+Run the client tests: `python3 tests/test_client.py`
+
+Run the server tests: `python3 tests/test_server.py`
