@@ -3,6 +3,24 @@
 This repository is a relatively simple implementation of an HTTP client and server program
 using the Python builtin `socket` module.
 
+## Contents
+
+myclient/
+- main.py - driver for the HTTP client
+- static/ - files ready to upload to an HTTP server via a PUT request
+
+myserver/
+- myserver/main.py - driver for the HTTP server
+- myserver/static/ - "database" of available files on the server
+
+tests/
+- test_client.py - tests for the http client
+- test_server.py - tests for the http server
+
+writeups/
+- design.* - submission discussion design, "how it works," tradeoffs, and future improvements
+- design.* - submission describing test cases
+
 ## Getting started
 
 Once you have cloned the repository, install the required modules: `pip install -r requirements.txt`.
