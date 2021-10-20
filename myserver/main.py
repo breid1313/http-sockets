@@ -153,11 +153,22 @@ def main():
                 # send a message back with the desired file or 404
                 return_file(connection, filename)
 
-            if method == "PUT":
+            elif method == "PUT":
                 # get the file data from the request
                 content = data.split("\r\n\r\n")[1]
                 # try to write the file data and return a response message
                 put_file(connection, filename, content)
+
+            else:
+                message = f"HTTP/{HTTP_VERSION} 400 Bad Request\r\n"
+                dt = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+                message += f"Date: {dt}\r\n"
+                message += "Server: Python HTTP Socket Server\r\n"
+                message += "Connection: close\r\n\r\n"
+
+                print("sending 400")
+                connection.send(message.encode())
+                connection.close()
 
         except Exception:
             # we had a problem... send a 500
