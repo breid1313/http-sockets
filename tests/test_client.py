@@ -1,6 +1,8 @@
 import argparse
 import unittest
+import os
 from unittest import mock
+from pathlib import Path
 from myclient.main import main
 
 
@@ -48,6 +50,10 @@ class TestClient(unittest.TestCase):
     # this will obviously fail if the server is not running on localhost
     def test_put_internal(self):
         self.assertIn(int(test_internal_put().split(" ")[1]), [200, 201, 204])
+
+        # cleanup
+        new_path = Path(__file__).parent.parent / "myserver" / "static" / "test.txt"
+        os.remove(new_path)
 
 
 if __name__ == "__main__":
